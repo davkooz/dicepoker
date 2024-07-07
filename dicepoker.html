@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gra w Kościanego Pokera</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-image: url('img/bg.png');
+            color: #333;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover
+        }
+
+        header {
+            background-color: #444;
+            top: 0;
+            color: white;
+            padding: 10px 0;
+        }
+
+        *,
+        *:before,
+        *:after {
+            box-sizing: inherit;
+        }
+
+        .round-display {
+            text-align: center;
+            font-size: 20px;
+            margin: 10px auto;
+            font-weight: bold;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 10px;
+            width: 80%;
+            max-width: 600px;
+        }
+
+        .player-area {
+            background-color: #f0f0f0;
+            margin: 20px auto;
+            padding: 10px;
+            border-radius: 10px;
+            width: 80%;
+            max-width: 600px;
+        }
+
+        .player-area,
+        .dice-container,
+        header,
+        footer {
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+
+        .dice-container {
+            display: flex;
+            justify-content: center;
+            margin: 15px 0;
+        }
+
+        .dice-container img {
+            width: 50px;
+            height: 50px;
+            margin: 5px;
+        }
+
+        .roll-button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .roll-button:hover {
+            background-color: #218838;
+        }
+
+        .score,
+        .result {
+            margin-top: 10px;
+            font-size: 18px;
+        }
+
+        footer {
+            background-color: #444;
+            color: white;
+            padding: 10px 0;
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+        }
+
+        @media screen and (max-width: 600px) {
+            .dice-container img {
+                width: 40px;
+                height: 40px;
+            }
+
+            .roll-button {
+                font-size: 14px;
+                padding: 8px 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>Kości Poker</h1>
+        <p>Rzuć kośćmi i spróbuj swojego szczęścia!</p>
+    </header>
+    <main>
+        <div class="round-display">Runda: <span id="currentRound">1</span> / <span id="totalRounds">5</span></div>
+        <section id="playerA" class="player-area">
+            <h2>Gracz A</h2>
+            <div class="dice-container" id="dice-container-A"></div>
+            <button class="roll-button" onclick="rollDice('A')">Rzuć Kośćmi</button>
+            <div class="score" id="scoreA">Wynik: 0</div>
+            <div class="result" id="resultA">Rezultat</div>
+        </section>
+        <section id="playerB" class="player-area">
+            <h2>Gracz B</h2>
+            <div class="dice-container" id="dice-container-B"></div>
+            <button class="roll-button" onclick="rollDice('B')">Rzuć Kośćmi</button>
+            <div class="score" id="scoreB">Wynik: 0</div>
+            <div class="result" id="resultB">Rezultat</div>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; Dawid Kuzmicz 157052</p>
+    </footer>
+    <script>
+        let scores = { A: 0, B: 0 };
+        let currentRound = 1;
+        const totalRounds = 5;
+        let turn = 'A';
+
+        function rollDice(player) {
+            if (player !== turn) {
+                alert("To nie Twoja kolej!");
+                return;
+            }
+            let dices = [];
+            for (let i = 0; i < 5; i++) {
+                dices.push(Math.floor(Math.random() * 6) + 1);
+            }
+            updateDiceImages(player, dices);
+            updateScoreAndResult(player, dices);
+            turn = turn === 'A' ? 'B' : 'A';
+            if (turn === 'A') {
+                checkEndOfRound();
+            }
+        }
+
+        function updateDiceImages(player, dices) {
+            const diceContainer = document.getElementById('dice-container-' + player);
+            diceContainer.innerHTML = '';
+            dices.forEach(dice => {
+                const img = document.createElement('img');
+                img.src = 'img/dice' + dice + '.png';
+                diceContainer.appendChild(img);
+            });
+        }
+
+        function updateScoreAndResult(player, dices) {
+            const result = calculateResult(dices);
+            const score = getScoreForResult(result);
+            scores[player] += score;
+            document.getElementById('score' + player).innerText = `Wynik: ${scores[player]}`;
+            document.getElementById('result' + player).innerText = `Rezultat: ${result}`;
+            //checkEndOfRound();
+        }
+
+        function calculateResult(dices) {
+            if (isFiveOfAKind(dices)) return 'Poker';
+            if (isFourOfAKind(dices)) return 'Kareta';
+            if (isFullHouse(dices)) return 'Full';
+            if (isStraight(dices)) return 'Strit';
+            if (isThreeOfAKind(dices)) return 'Trójka';
+            if (isTwoPairs(dices)) return 'Dwie pary';
+            if (isPair(dices)) return 'Para';
+            return 'Najwyższa kość';
+        }
+        function getScoreForResult(result) {
+            switch (result) {
+                case 'Poker': return 50;
+                case 'Kareta': return 25;
+                case 'Full': return 20;
+                case 'Strit': return 15;
+                case 'Trójka': return 10;
+                case 'Dwie pary': return 5;
+                case 'Para': return 2;
+                default: return 1;
+            }
+        }
+        function countOccurrences(dices) {
+            return dices.reduce((acc, dice) => {
+                acc[dice] = (acc[dice] || 0) + 1;
+                return acc;
+            }, {});
+        }
+
+        function isPair(dices) {
+            const counts = countOccurrences(dices);
+            return Object.values(counts).some(count => count === 2);
+        }
+
+        function isTwoPairs(dices) {
+            const counts = countOccurrences(dices);
+            let pairs = 0;
+            Object.values(counts).forEach(count => {
+                if (count === 2) pairs++;
+            });
+            return pairs === 2;
+        }
+
+        function isThreeOfAKind(dices) {
+            const counts = countOccurrences(dices);
+            return Object.values(counts).some(count => count === 3);
+        }
+
+        function isStraight(dices) {
+            const sorted = [...new Set(dices)].sort();
+            return sorted.length === 5 && sorted[4] - sorted[0] === 4;
+        }
+
+        function isFullHouse(dices) {
+            return isThreeOfAKind(dices) && isPair(dices);
+        }
+
+        function isFourOfAKind(dices) {
+            const counts = countOccurrences(dices);
+            return Object.values(counts).some(count => count === 4);
+        }
+
+        function isFiveOfAKind(dices) {
+            return new Set(dices).size === 1;
+        }
+        function checkEndOfRound() {
+            if (currentRound >= totalRounds) {
+                endGame();
+            } else {
+                currentRound++;
+                document.getElementById('currentRound').innerText = currentRound;
+            }
+        }
+        function endGame() {
+            const winner = scores['A'] > scores['B'] ? 'Gracz A' : (scores['A'] === scores['B'] ? 'Remis' : 'Gracz B');
+            const message = `Koniec gry! Zwycięzca: ${winner} (A: ${scores['A']} - B: ${scores['B']})\nCzy chcesz zagrać ponownie?`;
+            if (confirm(message)) {
+                resetGame();
+            }
+        }
+
+        function resetGame() {
+            scores = { A: 0, B: 0 };
+            currentRound = 1;
+            updateDiceImages('A', [0, 0, 0, 0, 0]);
+            updateDiceImages('B', [0, 0, 0, 0, 0]);
+            document.getElementById('scoreA').innerText = 'Wynik: 0';
+            document.getElementById('scoreB').innerText = 'Wynik: 0';
+            document.getElementById('resultA').innerText = 'Rezultat';
+            document.getElementById('resultB').innerText = 'Rezultat';
+            document.getElementById('currentRound').innerText = '1';
+        }
+    </script>
+</body>
+
+</html>
